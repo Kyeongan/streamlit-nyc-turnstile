@@ -10,3 +10,5 @@
 pipenv install
 streamlit run app.py
 ```
+
+![landing page](https://github.com/Kyeongan/streamlit-nyc-turnstile/raw/main/assets/demo.gif)
