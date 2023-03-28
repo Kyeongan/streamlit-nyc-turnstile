@@ -81,14 +81,10 @@ def load_data():
     return df
 
 
-df = load_data()
-data_rows = 200000
-df = df[:data_rows]
-
 # ==========================================================
 # ========== SIDEBAR config here ==========
 # ==========================================================
-
+data_rows = 100000
 with st.sidebar:
     st.write("Please Filter Here:")
     num_weeks = st.slider('Period (Week)', 1, 10)
@@ -100,18 +96,18 @@ with st.sidebar:
                           data_rows*10, None, data_rows)
     st.write("", data_rows, 'data rows selected')
 
-    st.title("")
-    start_time = st.slider(
-        "When do you start?",
-        value=datetime.date(2020, 1, 1),
-        format="MM/DD/YYYY")
-    st.write("Start date:", start_time)
+    # st.title("")
+    # start_time = st.slider(
+    #     "When do you start?",
+    #     value=datetime.date(2020, 1, 1),
+    #     format="MM/DD/YYYY")
+    # st.write("Start date:", start_time)
 
-    st.title("")
-    d = st.date_input(
-        "",
-        datetime.date(2020, 1, 1),
-    )
+    # st.title("")
+    # d = st.date_input(
+    #     "",
+    #     datetime.date(2020, 1, 1),
+    # )
 
     st.title("")
     st.title("")
@@ -122,7 +118,8 @@ with st.sidebar:
 
 
 # comment/uncomment below for the test
-
+df = load_data()
+df = df[:data_rows]
 
 df.groupby(['UNIT', 'SCP'])['STATION'].nunique().sort_values()
 df.sort_values(by=['DATE', 'TIME'])  # checking start/end of date/time
