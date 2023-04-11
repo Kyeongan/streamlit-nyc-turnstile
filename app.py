@@ -114,7 +114,6 @@ with st.sidebar:
 
 # comment/uncomment below for the test
 df = load_data()
-st.write(df.shape[0])
 
 df.groupby(['UNIT', 'SCP'])['STATION'].nunique().sort_values()
 df.sort_values(by=['DATE', 'TIME'])  # checking start/end of date/time
@@ -183,7 +182,8 @@ st.markdown('<p class="mid-font">Top 10 busiest stations of the New York City Su
             unsafe_allow_html=True)
 max = group_station.max()
 steps = np.ceil(max/10)
-st.write(max)
+# st.write(max)
+
 fig = plt.figure(figsize=[8, 3])
 ax = sns.barplot(data=group_station.head(10).reset_index(),
                  x='ENTRY_EXIT', y='STATION', palette='rainbow')
