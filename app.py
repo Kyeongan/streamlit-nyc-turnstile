@@ -56,25 +56,24 @@ with col_right:
 
 num_weeks = 1
 
-
-@st.cache_data
+# @st.cache_data
 def load_data():
     filelist = []
-    startdate = filedate = pd.Timestamp('2020-01-04 00:00:00')
+    startdate = pd.Timestamp('2020-01-04 00:00:00')
     filename_regex = "http://web.mta.info/developers/data/nyct/turnstile/turnstile_{}.txt"
     for numfiles in range(num_weeks):
 
         # create the appropriate filename for the week
-        filedate_str = str(
-            filedate.year)[-2:] + str(filedate.month).zfill(2) + str(filedate.day).zfill(2)
-        filename = filename_regex.format(filedate_str)
+        startdate_str = str(
+            startdate.year)[-2:] + str(startdate.month).zfill(2) + str(startdate.day).zfill(2)
+        filename = filename_regex.format(startdate_str)
 
         # read the file and append it to the list of files to be concatenated
         df = pd.read_csv(filename, parse_dates=['DATE'])
         filelist.append(df)
 
         # advance to the next week
-        filedate += pd.Timedelta(days=7)
+        startdate += pd.Timedelta(days=7)
 
     df = pd.concat(filelist, axis=0, ignore_index=True)
 
@@ -84,17 +83,13 @@ def load_data():
 # ==========================================================
 # ========== SIDEBAR config here ==========
 # ==========================================================
-data_rows = 100000
 with st.sidebar:
     st.write("Please Filter Here:")
     num_weeks = st.slider('Period (Week)', 1, 10)
-    st.write("", num_weeks, 'weeks selected')
+    # st.write("", num_weeks, 'weeks selected')
 
-    st.title("Below are work-in-progress")
-    st.title("")
-    data_rows = st.slider('Rows Selection', data_rows,
-                          data_rows*10, None, data_rows)
-    st.write("", data_rows, 'data rows selected')
+    # st.title("Below are work-in-progress")
+    # st.title("")
 
     # st.title("")
     # start_time = st.slider(
@@ -109,17 +104,17 @@ with st.sidebar:
     #     datetime.date(2020, 1, 1),
     # )
 
-    st.title("")
-    st.title("")
-    st.title("")
-    st.title("")
+    # st.title("")
+    # st.title("")
+    # st.title("")
+    # st.title("")
     st.write(
         'Created by Karl Kwon @ [GitHub](https://github.com/Kyeongan)')
 
 
 # comment/uncomment below for the test
 df = load_data()
-df = df[:data_rows]
+st.write(df.shape[0])
 
 df.groupby(['UNIT', 'SCP'])['STATION'].nunique().sort_values()
 df.sort_values(by=['DATE', 'TIME'])  # checking start/end of date/time
