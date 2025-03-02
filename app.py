@@ -59,54 +59,25 @@ with col_right:
 num_weeks = 2
 
 
-# @st.cache_data
-import pandas as pd
-import requests
-
-
-def load_data(start_date="2020-01-01", num_months=4):
+@st.cache_data
+def load_data():
     filelist = []
-    start_date = pd.Timestamp(start_date)
+    startdate = filedate = pd.Timestamp('2020-01-04 00:00:00')
+    filename_regex = "http://web.mta.info/developers/data/nyct/turnstile/turnstile_{}.txt"
+    for numfiles in range(num_weeks):
 
-    # MTA Subway Turnstile Data API URL
-    api_url = "https://data.ny.gov/resource/f462-ka72.json"
+        # create the appropriate filename for the week
+        filedate_str = str(
+            filedate.year)[-2:] + str(filedate.month).zfill(2) + str(filedate.day).zfill(2)
+        filename = filename_regex.format(filedate_str)
 
-    # Iterate over months
-    for month in range(num_months):
-        # Calculate the year and month for this iteration
-        year_month = start_date.strftime("%Y-%m")  # e.g., '2020-01'
+        # read the file and append it to the list of files to be concatenated
+        df = pd.read_csv(filename, parse_dates=['DATE'])
+        filelist.append(df)
 
-        # API query parameters to filter the data by date range
-        params = {
-            "$where": f"date >= '{start_date.strftime('%Y-%m-%d')}' AND date < '{(start_date + pd.Timedelta(days=30)).strftime('%Y-%m-%d')}'"
-        }
+        # advance to the next week
+        filedate += pd.Timedelta(days=7)
 
-        try:
-            # Make the request to the API
-            print(f"Fetching data for {year_month}...")
-            response = requests.get(api_url, params=params)
-
-            # Check if the request was successful
-            if response.status_code == 200:
-                data = response.json()
-                # Convert the JSON data into a pandas DataFrame
-                df = pd.json_normalize(data)
-                filelist.append(df)
-            else:
-                print(
-                    f"⚠️ Failed to retrieve data for {year_month} (status code {response.status_code})"
-                )
-
-        except Exception as e:
-            print(f"Error loading data for {year_month}: {e}")
-
-        # Move to the next month
-        start_date += pd.Timedelta(days=30)  # Approximate for 30 days in a month
-
-    if not filelist:
-        raise ValueError("No data could be loaded. Check the API or query parameters.")
-
-    # Concatenate the dataframes into one
     df = pd.concat(filelist, axis=0, ignore_index=True)
     return df
 
@@ -114,17 +85,13 @@ def load_data(start_date="2020-01-01", num_months=4):
 # ==========================================================
 # ========== SIDEBAR config here ==========
 # ==========================================================
-data_rows = 100000
 with st.sidebar:
     st.write("Please Filter Here:")
     num_weeks = st.slider('Period (Week)', 1, 10)
-    st.write("", num_weeks, 'weeks selected')
+    # st.write("", num_weeks, 'weeks selected')
 
-    st.title("Below are work-in-progress")
-    st.title("")
-    data_rows = st.slider('Rows Selection', data_rows,
-                          data_rows*10, None, data_rows)
-    st.write("", data_rows, 'data rows selected')
+    # st.title("Below are work-in-progress")
+    # st.title("")
 
     # st.title("")
     # start_time = st.slider(
@@ -139,23 +106,17 @@ with st.sidebar:
     #     datetime.date(2020, 1, 1),
     # )
 
-    st.title("")
-    st.title("")
-    st.title("")
-    st.title("")
+    # st.title("")
+    # st.title("")
+    # st.title("")
+    # st.title("")
     st.write(
         'Created by Karl Kwon @ [GitHub](https://github.com/Kyeongan)')
 
 
 # comment/uncomment below for the test
 df = load_data()
-# df = df[:data_rows]
-
-# streamlit write for dataframe info()
-buffer = io.StringIO()
-df.info(buf=buffer)
-s = buffer.getvalue()
-st.text(s)
+df = df[:data_rows]
 
 df.groupby(['UNIT', 'SCP'])['STATION'].nunique().sort_values()
 df.sort_values(by=['DATE', 'TIME'])  # checking start/end of date/time
@@ -224,7 +185,8 @@ st.markdown('<p class="mid-font">Top 10 busiest stations of the New York City Su
             unsafe_allow_html=True)
 max = group_station.max()
 steps = np.ceil(max/10)
-st.write(max)
+# st.write(max)
+
 fig = plt.figure(figsize=[8, 3])
 ax = sns.barplot(data=group_station.head(10).reset_index(),
                  x='ENTRY_EXIT', y='STATION', palette='rainbow')
