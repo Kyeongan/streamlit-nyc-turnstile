@@ -5,6 +5,7 @@ import plotly.express as px
 import seaborn as sns
 import datetime
 import streamlit as st
+import io
 st.set_page_config(
     page_title="NYC MTA Turnstile Traffic Dashboard",
     page_icon="🚊",
@@ -54,29 +55,30 @@ with col_right:
     # st.subheader("NYC MTA Turnstile")
     st.image("https://miro.medium.com/v2/resize:fit:1400/format:webp/1*GnEQe-mNGgGxSaMCQqS28A.jpeg", width=350)
 
-num_weeks = 1
 
-# @st.cache_data
+num_weeks = 2
+
+
+@st.cache_data
 def load_data():
     filelist = []
-    startdate = pd.Timestamp('2020-01-04 00:00:00')
+    startdate = filedate = pd.Timestamp('2020-01-04 00:00:00')
     filename_regex = "http://web.mta.info/developers/data/nyct/turnstile/turnstile_{}.txt"
     for numfiles in range(num_weeks):
 
         # create the appropriate filename for the week
-        startdate_str = str(
-            startdate.year)[-2:] + str(startdate.month).zfill(2) + str(startdate.day).zfill(2)
-        filename = filename_regex.format(startdate_str)
+        filedate_str = str(
+            filedate.year)[-2:] + str(filedate.month).zfill(2) + str(filedate.day).zfill(2)
+        filename = filename_regex.format(filedate_str)
 
         # read the file and append it to the list of files to be concatenated
         df = pd.read_csv(filename, parse_dates=['DATE'])
         filelist.append(df)
 
         # advance to the next week
-        startdate += pd.Timedelta(days=7)
+        filedate += pd.Timedelta(days=7)
 
     df = pd.concat(filelist, axis=0, ignore_index=True)
-
     return df
 
 
@@ -114,6 +116,7 @@ with st.sidebar:
 
 # comment/uncomment below for the test
 df = load_data()
+df = df[:data_rows]
 
 df.groupby(['UNIT', 'SCP'])['STATION'].nunique().sort_values()
 df.sort_values(by=['DATE', 'TIME'])  # checking start/end of date/time
