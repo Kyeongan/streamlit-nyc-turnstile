@@ -5,6 +5,7 @@ import plotly.express as px
 import seaborn as sns
 import datetime
 import streamlit as st
+import io
 st.set_page_config(
     page_title="NYC MTA Turnstile Traffic Dashboard",
     page_icon="🚊",
@@ -54,10 +55,11 @@ with col_right:
     # st.subheader("NYC MTA Turnstile")
     st.image("https://miro.medium.com/v2/resize:fit:1400/format:webp/1*GnEQe-mNGgGxSaMCQqS28A.jpeg", width=350)
 
-num_weeks = 1
+
+num_weeks = 2
 
 
-@st.cache_data
+# @st.cache_data
 def load_data():
     filelist = []
     startdate = filedate = pd.Timestamp('2020-01-04 00:00:00')
@@ -119,7 +121,13 @@ with st.sidebar:
 
 # comment/uncomment below for the test
 df = load_data()
-df = df[:data_rows]
+# df = df[:data_rows]
+
+# streamlit write for dataframe info()
+buffer = io.StringIO()
+df.info(buf=buffer)
+s = buffer.getvalue()
+st.text(s)
 
 df.groupby(['UNIT', 'SCP'])['STATION'].nunique().sort_values()
 df.sort_values(by=['DATE', 'TIME'])  # checking start/end of date/time
