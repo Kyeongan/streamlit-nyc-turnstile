@@ -60,26 +60,54 @@ num_weeks = 2
 
 
 # @st.cache_data
-def load_data():
+import pandas as pd
+import requests
+
+
+def load_data(start_date="2020-01-01", num_months=4):
     filelist = []
-    startdate = filedate = pd.Timestamp('2020-01-04 00:00:00')
-    filename_regex = "http://web.mta.info/developers/data/nyct/turnstile/turnstile_{}.txt"
-    for numfiles in range(num_weeks):
+    start_date = pd.Timestamp(start_date)
 
-        # create the appropriate filename for the week
-        filedate_str = str(
-            filedate.year)[-2:] + str(filedate.month).zfill(2) + str(filedate.day).zfill(2)
-        filename = filename_regex.format(filedate_str)
+    # MTA Subway Turnstile Data API URL
+    api_url = "https://data.ny.gov/resource/f462-ka72.json"
 
-        # read the file and append it to the list of files to be concatenated
-        df = pd.read_csv(filename, parse_dates=['DATE'])
-        filelist.append(df)
+    # Iterate over months
+    for month in range(num_months):
+        # Calculate the year and month for this iteration
+        year_month = start_date.strftime("%Y-%m")  # e.g., '2020-01'
 
-        # advance to the next week
-        filedate += pd.Timedelta(days=7)
+        # API query parameters to filter the data by date range
+        params = {
+            "$where": f"date >= '{start_date.strftime('%Y-%m-%d')}' AND date < '{(start_date + pd.Timedelta(days=30)).strftime('%Y-%m-%d')}'"
+        }
 
+        try:
+            # Make the request to the API
+            print(f"Fetching data for {year_month}...")
+            response = requests.get(api_url, params=params)
+
+            # Check if the request was successful
+            if response.status_code == 200:
+                data = response.json()
+                # Convert the JSON data into a pandas DataFrame
+                df = pd.json_normalize(data)
+                filelist.append(df)
+            else:
+                print(
+                    f"⚠️ Failed to retrieve data for {year_month} (status code {response.status_code})"
+                )
+
+        except Exception as e:
+            print(f"Error loading data for {year_month}: {e}")
+
+        # Move to the next month
+        start_date += pd.Timedelta(days=30)  # Approximate for 30 days in a month
+
+    if not filelist:
+        raise ValueError("No data could be loaded. Check the API or query parameters.")
+
+    # Concatenate the dataframes into one
     df = pd.concat(filelist, axis=0, ignore_index=True)
-
     return df
 
 
